@@ -1,8 +1,10 @@
 import triplets
 
 # configure tests, create separate tests for suffixes
+lemmas = triplets.load_file("triplets/all_lemmas")
+prefix_dublets = triplets.strip_prefixes(lemmas)
 
-def prefix_test_negative():
+def test_prefix_negative():
     assert ("vařit", "ařit") not in prefix_dublets, "('vařit', 'ařit') found"
     assert ("zvát", "vát") not in prefix_dublets, "('zvát', 'vát') found"
 

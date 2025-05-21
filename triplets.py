@@ -105,7 +105,7 @@ def find_va_alternations(lemma, sorted_lemmas):
 # in the calling part, ask how many lemmas the file contains and how long the list of dublets is (x dublets out of y lemmas; percentage)
 if __name__ == '__main__':
     lemmas = load_file("triplets/all_lemmas")
-    #prefix_dublets = strip_prefixes(lemmas)
+    prefix_dublets = strip_prefixes(lemmas)
     #suffix_dublets = find_suffixal_alternations(lemmas)
     #print(f"Number of lemmas: {len(lemmas)}")
     #print(f"Number of prefix dublets: {len(prefix_dublets)} ({round((len(prefix_dublets) / len(lemmas) * 100), 2)} %)")
