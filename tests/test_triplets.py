@@ -13,11 +13,3 @@ def prefix_test_positive():
 
 def suffix_test_positive():
     assert ("přijet", "jet") in prefix_dublets, "('napustit', 'napouštět') not found"
-
-if __name__ == '__main__':
-    lemmas = triplets.load_file("Documents/triplets/all_lemmas")
-    prefix_dublets = triplets.strip_prefixes(lemmas)
-    prefix_test_negative()
-    prefix_test_positive()
-    print("Everything passed.")
-
