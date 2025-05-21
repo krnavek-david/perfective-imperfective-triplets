@@ -63,14 +63,23 @@ def find_suffixal_alternations(lemmas):
         pair = find_ou_u_alternations(lemma, sorted_lemmas)
         if pair is not None:
             pairs.append(pair)
+            # if pair[0] is in unpaired, remove it
+            if pair[0] in unpaired:
+                unpaired.remove(pair[0])
             break
+        else:
+            pair = find_va_alternations(lemma, sorted_lemmas)
+            if pair is not None:
+                pairs.append(pair)
+            else:
+            # if lemma is not in first members of pairs, append it
+                if lemma not in (p[0] for p in pairs):
+                    unpaired.append(lemma)
     return pairs
 
-    # create pairs with different suffixes (pustit -> pouštět) - should this be part of this function?
+def find_ou_u_alternations(lemma, sorted_lemmas):
 
-def find_ou_u_alternations(lemma, lemmas):
-
-    if lemma in ["vysoušet", "osoušet"]:
+    if lemma in ["dosoušet", "vysoušet", "osoušet", "předsoušet"]:
         return (lemma.replace("soušet", "sušit"), lemma)
 
     alternation_dict = {
@@ -79,7 +88,7 @@ def find_ou_u_alternations(lemma, lemmas):
         "[eě]t$": "it"
     }
 
-    # tasks: putting code on git repository, writing tests (+ googling how to make testing work in Python/VS Code), deal with the "vysušit" member in unpaired, write the "va" function
+    # tasks: deal with the "vysušit/zkusit" member in unpaired, write the "va" function
     # think about putting it in a single regular expression
     
     replaced = lemma
@@ -88,19 +97,35 @@ def find_ou_u_alternations(lemma, lemmas):
         replaced = re.sub(k, v, replaced)
     
     if replaced != lemma:
-        if replaced in lemmas:
+        if replaced in sorted_lemmas:
             return (replaced, lemma)
         
     return None
 
-    # regular expressions - replace ouš with us, et/ět (at the end) with it
-    # see if it made the change
-    # if yes, search for the form in lemmas; organise the lemmas so that the program looks up faster
-    # if found, return true
-    # else, return false
-
 def find_va_alternations(lemma, sorted_lemmas):
-    pass # fill the function
+
+    alternation_dict = {
+        "at$": "ávat",
+        "et$": "ívat",
+        "ět$": "ívat",
+        "ejt$": "ejvat",
+        "it$": "ívat",
+        "ít$": "ívat",
+        "out$": "ouvat"
+    }
+
+    for k, v in alternation_dict.items():
+        replaced = re.sub(k, v, lemma)
+
+    if replaced != lemma:
+        if replaced in sorted_lemmas:
+            return (replaced, lemma)
+        
+    return None
+
+    
+
+    # problem: uklidnit - uklidňovat × špinit - špinívat
                 
 # in the calling part, ask how many lemmas the file contains and how long the list of dublets is (x dublets out of y lemmas; percentage)
 if __name__ == '__main__':
