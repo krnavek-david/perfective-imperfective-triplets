@@ -17,7 +17,7 @@ def suffix_test_positive():
 if __name__ == '__main__':
     lemmas = triplets.load_file("Documents/triplets/all_lemmas")
     prefix_dublets = triplets.strip_prefixes(lemmas)
-    test_negative()
-    test_positive()
+    prefix_test_negative()
+    prefix_test_positive()
     print("Everything passed.")
 
