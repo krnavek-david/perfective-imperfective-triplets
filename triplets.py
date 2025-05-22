@@ -7,6 +7,7 @@
 # github; gitignore the verb file
 
 import re
+from data import prefix_pairs_false_friends, prefixes
 
 # open file + read line by line and put it in the list/dictionary
 def load_file(filepath):
@@ -19,15 +20,18 @@ def load_file(filepath):
 
 # strip suffixes or prefixes (in separate functions)
 def strip_prefixes(lemmas):
-    # check if a verb without the prefix exists in lemmas, strip only if it does
-    # return pairs (psát - napsat)
-    # optional: think about speed (how to speed up the process of checking)
+    # task: put triplets together (pustit - napustit - napouštět; problem: dát - dávat - prodat - prodávat)
+    # think about how to solve napsat - psát × vyhrát - hrát
+    # think about how to pair verbs where both the suffix and the prefix changes (přinášet - nosit)
+    # optional: learn to find what slows down the code, try to make it faster
+    # compile a list of errors for the thousand verbs
+    # solve the false va problem
+
     stripped = []
-    prefixes = ["do", "na", "nad", "nade", "o", "ob", "od", "po", "pod", "pode", "pro", "při", "pře", "roz", "s", "u", "v", "ve", "vy", "vz", "z", "za", "ze"]
-    prefixes = sorted(prefixes, key=len, reverse=True)
+    sorted_prefixes = sorted(prefixes, key=len, reverse=True)
     for lemma in lemmas:
-        for prefix in prefixes:
-            if lemma.startswith(prefix) and (no_prefix := lemma[len(prefix):]) in lemmas:
+        for prefix in sorted_prefixes:
+            if lemma not in prefix_pairs_false_friends and lemma.startswith(prefix) and (no_prefix := lemma[len(prefix):]) in lemmas:
                 stripped.append((lemma, no_prefix))
                 print(stripped[-1])
                 break
@@ -60,21 +64,21 @@ def find_suffixal_alternations(lemmas):
     # suffixes = ["at", "át", "ct", "et", "ět", "it", "ít", "st", "ut", "t"]
     # suffixes = sorted(suffixes, key=len, reverse=True)
     for lemma in sorted_lemmas:
-        pair = find_ou_u_alternations(lemma, sorted_lemmas)
-        if pair is not None:
+        if pair := find_ou_u_alternations(lemma, sorted_lemmas):
             pairs.append(pair)
             # if pair[0] is in unpaired, remove it
             if pair[0] in unpaired:
                 unpaired.remove(pair[0])
             break
+        elif pair := find_va_alternations(lemma, sorted_lemmas):
+            pairs.append(pair)
+            if pair[0] in unpaired:
+                unpaired.remove(pair[0])
+            break
         else:
-            pair = find_va_alternations(lemma, sorted_lemmas)
-            if pair is not None:
-                pairs.append(pair)
-            else:
             # if lemma is not in first members of pairs, append it
-                if lemma not in (p[0] for p in pairs):
-                    unpaired.append(lemma)
+            if lemma not in (p[0] for p in pairs):
+                unpaired.append(lemma)
     return pairs
 
 def find_ou_u_alternations(lemma, sorted_lemmas):
@@ -88,7 +92,6 @@ def find_ou_u_alternations(lemma, sorted_lemmas):
         "[eě]t$": "it"
     }
 
-    # tasks: deal with the "vysušit/zkusit" member in unpaired, write the "va" function
     # think about putting it in a single regular expression
     
     replaced = lemma
@@ -129,8 +132,8 @@ def find_va_alternations(lemma, sorted_lemmas):
                 
 # in the calling part, ask how many lemmas the file contains and how long the list of dublets is (x dublets out of y lemmas; percentage)
 if __name__ == '__main__':
-    lemmas = load_file("triplets/all_lemmas")
-    prefix_dublets = strip_prefixes(lemmas)
+    loaded_lemmas = load_file("triplets/all_lemmas")
+    prefix_dublets = strip_prefixes(loaded_lemmas)
     #suffix_dublets = find_suffixal_alternations(lemmas)
     #print(f"Number of lemmas: {len(lemmas)}")
     #print(f"Number of prefix dublets: {len(prefix_dublets)} ({round((len(prefix_dublets) / len(lemmas) * 100), 2)} %)")
