@@ -20,58 +20,54 @@ def load_file(filepath):
 
 # strip suffixes or prefixes (in separate functions)
 def strip_prefixes(lemmas):
-    # task: put triplets together (pustit - napustit - napouštět; problem: dát - dávat - prodat - prodávat)
-    # think about how to solve napsat - psát × vyhrát - hrát
-    # think about how to pair verbs where both the suffix and the prefix changes (přinášet - nosit)
-    # optional: learn to find what slows down the code, try to make it faster
-    # compile a list of errors for the thousand verbs
-    # solve the false va problem
-    # ('dopustit', 'dopouštět') - didn't find pustit
-    # look for false friends (dojit, dojet)
-    # ('doplouvat', 'doplout') - wrong order
-    # manually write triplets/dublets for first 50 verbs
-
-    
-    # look if I could create a suffix dictionary from the start, so that I don't have to convert
-    # va problem (start with double va)
-
-
-    stripped = []
+    pair_dict = {}
     sorted_prefixes = sorted(prefixes, key=len, reverse=True)
     for lemma in lemmas:
         for prefix in sorted_prefixes:
-            if lemma not in prefix_pairs_false_friends and lemma.startswith(prefix) and (no_prefix := lemma[len(prefix):]) in lemmas:
-                stripped.append((lemma, no_prefix))
-                # print(stripped[-1])
-                break
-    return stripped
+            if lemma not in prefix_pairs_false_friends and lemma.startswith(prefix):
+                if(no_prefix := lemma[len(prefix):]) in lemmas:
+                    # stripped.append((lemma, no_prefix))
+                    pair_dict[lemma] = no_prefix
+                    # print(stripped[-1])
+                    break
+                elif(no_prefix_alt := re.sub("át$", "at", no_prefix)) in lemmas:
+                    pair_dict[lemma] = no_prefix_alt
+                    # print(stripped[-1])
+                    break
+    return pair_dict
 
 def find_suffixal_alternations(lemmas):
     sorted_lemmas = sorted(lemmas, key = lambda x : x[-1])
 
     pairs = []
     unpaired = [] # verbs for which we didn't find a pair; find a way to check both members of a pair and don't put "zkusit" in the list
+    pair_dict = {}
 
     # suffixes = ["at", "át", "ct", "et", "ět", "it", "ít", "st", "ut", "t"]
     # suffixes = sorted(suffixes, key=len, reverse=True)
     for lemma in sorted_lemmas:
         if pair := find_ou_u_alternations(lemma, sorted_lemmas):
             if lemma not in (p[1] for p in pairs):
-                pairs.append(pair)
+                # pairs.append(pair)
+                pair_dict[pair[0]] = pair[1]
             # if pair[0] is in unpaired, remove it
             if pair[0] in unpaired:
                 unpaired.remove(pair[0])
         elif pair := find_va_alternations(lemma, sorted_lemmas):
             if lemma not in (p[1] for p in pairs):
-                pairs.append(pair)
+                # pairs.append(pair)
+                pair_dict[pair[0]] = pair[1]
             # explain in the comment (if "pustit - pouštět" exists, don't append "pouštět - pouštívat")
             if pair[0] in unpaired:
                 unpaired.remove(pair[0])
         else:
             # if lemma is not in first members of pairs, append it
-            if lemma not in (p[0] for p in pairs):
+            # if lemma not in (p[0] for p in pairs):
+                # unpaired.append(lemma)
+            if lemma not in pair_dict:
                 unpaired.append(lemma)
-    return pairs
+    # return pairs
+    return pair_dict
 
 def find_ou_u_alternations(lemma, sorted_lemmas):
 
@@ -109,18 +105,20 @@ def find_va_alternations(lemma, sorted_lemmas):
         "nit$": ["nívat", "ňovat"],
         "tit$": ["tívat", "ťovat", "covat"],
         "oupit$": ["upovat"],
+        "inout$": ["íjet", "inovat"],
         "at$": ["ávat"],
         "át$": ["ávat"],
         "et$": ["ívat"],
         "ět$": ["ívat"],
         "ejt$": ["ejvat"],
         "it$": ["ívat", "ovat"],
-        "ít$": ["ívat", "évat"],
+        "ít$": ["ívat", "évat", "íjet"],
         "ýt$": ["ývat"],
         "out$": ["ouvat"]
     }
 
     # dosvítit - dosvěcovat isn't a pair, but an unwanted triplet (dosvítit - dosvěcet - dosvěcovat)
+    # for some verbs, both "íjet" and "inovat" are possible; the program doesn't solve that
 
     replaced = lemma
 
@@ -137,22 +135,22 @@ def find_va_alternations(lemma, sorted_lemmas):
 
     # problem: uklidnit - uklidňovat × špinit - špinívat
 
-def create_triplets(p_pairs, s_pairs):
+def create_triplets(prefix_dict, suffix_dict):
     # for pair in suffix_pairs if pair[0] in first members of prefix_pairs create triplet (prefix_pair[1], pair[0], pair[1])
     # for pair in prefix_pairs if pair[0] in first members of suffix_pairs create triplet (pair[1], pair[0], suffix_pair[1])
-    prefix_dict = {}
-    suffix_dict = {}
+    # prefix_dict = {}
+    # suffix_dict = {}
     prefix_suffix_triplets = []
 
-    for (k, v) in p_pairs:
+    # for (k, v) in p_pairs:
         # k can be napouštět
         # v can be pouštět
-        prefix_dict[k] = v
+        # prefix_dict[k] = v
 
-    for (k, v) in s_pairs:
+    # for (k, v) in s_pairs:
         # k can be pouštět
         # v can be pustit
-        suffix_dict[k] = v
+        # suffix_dict[k] = v
 
 
     
@@ -169,7 +167,13 @@ def create_triplets(p_pairs, s_pairs):
         prefix_suffix_triplets.append(triplet)
                 
     return prefix_suffix_triplets
-    
+
+def dict_to_list(d):
+    l = []
+    for k, v in d.items():
+        l.append((k, v))
+    return l
+
 # in the calling part, ask how many lemmas the file contains and how long the list of dublets is (x dublets out of y lemmas; percentage)
 if __name__ == '__main__':
     loaded_lemmas = load_file("triplets/all_lemmas")
